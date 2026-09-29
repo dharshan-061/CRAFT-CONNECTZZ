@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftConnect | Voice-First Digital Marketplace for Artisans</title>
+    <meta name="description"
+        content="CraftConnect empowers rural and semi-urban Indian artisans to sell handmade crafts using voice-first AI tools in Tamil, Hindi, and English without typing.">
+    <meta name="theme-color" content="#D94824">
+
+    <!-- Google Fonts: Outfit, Cinzel, Noto Sans Devanagari, Noto Sans Tamil -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome Icons for high-contrast accessibility -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-lang="en" data-role="artisan">
+
+    <!-- AUDIO SYNTHESIS & SOUND FX INDICATOR -->
+    <div id="sound-indicator" class="sound-indicator hidden">
+        <i class="fa-solid fa-volume-high"></i>
+        <span id="sound-indicator-text">Playing Audio Guide...</span>
+    </div>
+
+    <!-- TOP ACCESSIBILITY & NOTIFICATION BAR -->
+    <header class="cc-header">
+        <div class="header-container">
+            <!-- Brand Logo -->
+            <div class="brand-area" id="brand-logo" onclick="switchView('dashboard')">
+                <div class="brand-icon-wrapper">
+                    <i class="fa-solid fa-hands-holding-circle brand-icon"></i>
+                    <span class="voice-sparkle"><i class="fa-solid fa-microphone-lines"></i></span>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">Craft<span class="highlight">Connect</span></div>
+                    <div class="brand-tagline" data-i18n="tagline">Voice Marketplace for Indian Artisans</div>
+                </div>
+            </div>
+
+            <!-- Header Center: Role Toggle & Mode -->
+            <div class="role-switcher">
+                <button class="role-btn active" id="btn-role-artisan" onclick="setUserRole('artisan')">
+                    <i class="fa-solid fa-palette"></i>
+                    <span data-i18n="artisanMode">Artisan Studio</span>
+                </button>
+                <button class="role-btn" id="btn-role-buyer" onclick="setUserRole('buyer')">
+                    <i class="fa-solid fa-store"></i>
+                    <span data-i18n="buyerMode">Buyer Market</span>
+                </button>
+            </div>
+
+            <!-- Header Controls: Language, Notification, Profile -->
+            <div class="header-actions">
+                <!-- Artisan Onboarding Quick Launch -->
+                <button class="btn btn-outline-sm btn-onboard-header" onclick="openOnboardingModal()"
+                    title="Start Voice Onboarding">
+                    <i class="fa-solid fa-user-plus"></i> <span data-i18n="onboardBtn">Join Studio</span>
+                </button>
+
+                <!-- Language Switcher Dropdown -->
+                <div class="language-dropdown-wrapper">
+                    <button class="lang-selector-btn" id="lang-btn" onclick="toggleLangMenu()"
+                        aria-label="Select Language">
+                        <i class="fa-solid fa-language"></i>
+                        <span id="current-lang-label">English</span>
+                        <i class="fa-solid fa-chevron-down caret-icon"></i>
+                    </button>
+                    <div class="lang-dropdown-menu" id="lang-dropdown">
+                        <button class="lang-option active" data-lang-code="en" onclick="setLanguage('en')">
+                            <span class="lang-script">English</span>
+                            <span class="lang-native">Default</span>
+                        </button>
+                        <button class="lang-option" data-lang-code="hi" onclick="setLanguage('hi')">
+                            <span class="lang-script">हिन्दी</span>
+                            <span class="lang-native">Hindi</span>
+                        </button>
+                        <button class="lang-option" data-lang-code="ta" onclick="setLanguage('ta')">
+                            <span class="lang-script">தமிழ்</span>
+                            <span class="lang-native">Tamil</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Audio Help Toggle -->
+                <button class="icon-action-btn audio-help-btn" id="global-audio-help"
+                    onclick="playCurrentViewAudioHelp()" title="Listen to Page Voice Guide">
+                    <i class="fa-solid fa-ear-listen"></i>
+                    <span class="tooltip" data-i18n="audioGuideTooltip">Audio Guide</span>
+                </button>
+
+                <!-- Simulated Voice Order Bell -->
+                <button class="icon-action-btn notif-btn" id="order-notif-btn"
+                    onclick="triggerSimulatedOrderVoiceNotification()" title="Incoming Order Audio Alert">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notif-badge" id="order-badge-count">3</span>
+                </button>
+
+                <!-- Artisan Avatar / Quick Profile -->
+                <div class="artisan-header-chip" onclick="switchView('profile')">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80"
+                        alt="Artisan Avatar" class="artisan-avatar-img">
+                    <div class="artisan-chip-info">
+                        <div class="artisan-chip-name" id="header-artisan-name">Devi Ammal</div>
+                        <div class="artisan-chip-badge"><i class="fa-solid fa-circle-check"></i> <span
+                                data-i18n="verifiedBadge">GI Master Weaver</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- FLOATING PERSISTENT VOICE ASSISTANT TRIGGER -->
+    <aside class="voice-floating-container">
+        <button class="speak-to-sell-fab" id="main-speak-to-sell-btn" onclick="openVoiceAssistant('general')">
+            <div class="fab-wave"></div>
+            <div class="fab-wave fab-wave-2"></div>
+            <div class="fab-icon-box">
+                <i class="fa-solid fa-microphone-lines"></i>
+            </div>
+            <div class="fab-content">
+                <span class="fab-badge" data-i18n="voiceFirstBadge">Voice-First AI</span>
+                <span class="fab-title" data-i18n="speakToSellMain">🎤 Speak to Sell</span>
+            </div>
+        </button>
+    </aside>
+
+    <!-- MAIN APP WRAPPER -->
+    <div class="app-layout">
+
+        <!-- DESKTOP SIDEBAR / BOTTOM MOBILE NAVIGATION -->
+        <nav class="cc-navigation" id="main-nav">
+            <ul class="nav-list">
+                <li class="nav-item active" data-view="dashboard" onclick="switchView('dashboard')">
+                    <a href="#dashboard" class="nav-link">
+                        <i class="fa-solid fa-gauge-high nav-icon"></i>
+                        <span class="nav-label" data-i18n="navDashboard">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="voice-list" onclick="switchView('voice-list')">
+                    <a href="#voice-list" class="nav-link highlight-nav">
+                        <i class="fa-solid fa-microphone-lines nav-icon mic-glow"></i>
+                        <span class="nav-label" data-i18n="navCreateListing">Speak to Sell</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="marketplace" onclick="switchView('marketplace')">
+                    <a href="#marketplace" class="nav-link">
+                        <i class="fa-solid fa-shop nav-icon"></i>
+                        <span class="nav-label" data-i18n="navMarketplace">Marketplace</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="orders" onclick="switchView('orders')">
+                    <a href="#orders" class="nav-link">
+                        <i class="fa-solid fa-boxes-packing nav-icon"></i>
+                        <span class="nav-label" data-i18n="navOrders">Orders</span>
+                        <span class="nav-pill" id="nav-order-count">3</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="price-ai" onclick="switchView('price-ai')">
+                    <a href="#price-ai" class="nav-link">
+                        <i class="fa-solid fa-scale-balanced nav-icon"></i>
+                        <span class="nav-label" data-i18n="navFairPrice">AI Fair Price</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="profile" onclick="switchView('profile')">
+                    <a href="#profile" class="nav-link">
+                        <i class="fa-solid fa-id-badge nav-icon"></i>
+                        <span class="nav-label" data-i18n="navProfile">My Profile</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Quick Voice Help Banner at bottom of sidebar -->
+            <div class="nav-voice-helper">
+                <div class="helper-bubble">
+                    <i class="fa-solid fa-comments"></i>
+                    <p data-i18n="navHelpPrompt">Just speak to add products, check money, or update orders.</p>
+                </div>
+                <button class="helper-action-btn" onclick="openVoiceAssistant('general')">
+                    <i class="fa-solid fa-play"></i> <span data-i18n="tryVoiceNow">Try Voice</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- MAIN VIEW CONTAINER -->
+        <main class="cc-main-content" id="app-main">
+
+            <!-- ==============================================
+           1. VIEW: ARTISAN DASHBOARD / HOMEPAGE
+      =============================================== -->
+            <section id="view-dashboard" class="app-view active">
+                <!-- Hero Welcome Header -->
+                <div class="dashboard-hero-card">
+                    <div class="hero-decorative-pattern"></div>
+                    <div class="hero-content">
+                        <div class="artisan-greeting">
+                            <span class="namaste-badge" data-i18n="namasteBadge">🙏 Namaste & Welcome</span>
+                            <h1 class="artisan-welcome-name" id="dash-greeting">Vanakkam, Devi Ammal!</h1>
+                            <p class="hero-subtext" data-i18n="dashSubtitle">Your voice-powered handicraft studio is
+                                live. You have 3 active orders to ship today.</p>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn btn-voice-huge" onclick="openVoiceAssistant('create-listing')">
+                                <i class="fa-solid fa-microphone"></i>
+                                <span data-i18n="heroVoiceBtn">🎤 Speak to Sell New Craft</span>
+                            </button>
+                            <button class="btn btn-audio-listen" onclick="speakText(getLocalized('dailyVoiceDigest'))">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <span data-i18n="listenDailyDigest">🔊 Listen to Daily Audio Digest</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Income Highlight Box -->
+                    <div class="hero-earnings-tile">
+                        <div class="tile-icon-wrap"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="tile-details">
+                            <div class="tile-label" data-i18n="thisMonthIncome">This Month's Earnings</div>
+                            <div class="tile-amount">₹38,450</div>
+                            <div class="tile-sub"><i class="fa-solid fa-arrow-trend-up"></i> +42% <span
+                                    data-i18n="noMiddleman">Direct to Bank/UPI</span></div>
+                        </div>
+                        <button class="btn-mini-withdraw" onclick="showIncomeDetailsModal()">
+                            <i class="fa-solid fa-building-columns"></i> <span data-i18n="viewPayouts">Payouts</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACCESSIBLE 4 BIG TILE ACTIONS FOR LOW LITERACY ARTISANS -->
+                <div class="quick-action-grid">
+                    <!-- Action 1: Speak to List -->
+                    <div class="action-card card-primary" onclick="switchView('voice-list')">
+                        <div class="card-icon-circle"><i class="fa-solid fa-microphone-lines"></i></div>
+                        <div class="card-body">
+                            <h3 data-i18n="tileSpeakSellTitle">1. Speak to Sell</h3>
+                            <p data-i18n="tileSpeakSellDesc">Describe your craft by voice. AI creates price, title &
+                                description.</p>
+                        </div>
+                        <div class="card-arrow"><i class="fa-solid fa-circle-arrow-right"></i></div>
+                    </div>
+
+                    <!-- Action 2: Check Orders -->
+                    <div class="action-card card-accent" onclick="switchView('orders')">
+                        <div class="card-icon-circle"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="card-body">
+                            <div class="badge-row">
+                                <h3 data-i18n="tileOrdersTitle">2. Active Orders</h3>
+                                <span class="count-badge">3 New</span>
+                            </div>
+                            <p data-i18n="tileOrdersDesc">Listen to buyer details and dispatch sarees & pottery today.
+                            </p>
+                        </div>
+                        <div class="card-arrow"><i class="fa-solid fa-circle-arrow-right"></i></div>
+                    </div>
+
+                    <!-- Action 3: Fair Price Estimator -->
+                    <div class="action-card card-emerald" onclick="switchView('price-ai')">
+                        <div class="card-icon-circle"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div class="card-body">
+                            <h3 data-i18n="tileFairPriceTitle">3. AI Fair Price</h3>
+                            <p data-i18n="tileFairPriceDesc">Calculate fair wages for labor hours & raw silk/clay cost.
+                            </p>
+                        </div>
+                        <div class="card-arrow"><i class="fa-solid fa-circle-arrow-right"></i></div>
+                    </div>
+
+                    <!-- Action 4: Craft Story & Audio -->
+                    <div class="action-card card-gold" onclick="switchView('profile')">
+                        <div class="card-icon-circle"><i class="fa-solid fa-bullhorn"></i></div>
+                        <div class="card-body">
+                            <h3 data-i18n="tileStoryTitle">4. My Craft Story</h3>
+                            <p data-i18n="tileStoryDesc">Your voice recording is played to buyers worldwide.</p>
+                        </div>
+                        <div class="card-arrow"><i class="fa-solid fa-circle-arrow-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD SPLIT: LIVE ORDERS & RECENT CRAFT LISTINGS -->
+                <div class="dashboard-split-layout">
+
+                    <!-- Left Column: Pending Voice Orders -->
+                    <div class="content-panel">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <i class="fa-solid fa-truck-fast panel-icon"></i>
+                                <div>
+                                    <h2 data-i18n="urgentOrdersTitle">Urgent Orders to Dispatch</h2>
+                                    <span class="panel-subtitle" data-i18n="urgentOrdersSubtitle">Click speaker to hear
+                                        buyer voice instructions</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-sm" onclick="switchView('orders')">
+                                <span data-i18n="viewAllOrders">View All (3)</span>
+                            </button>
+                        </div>
+
+                        <div class="orders-preview-list" id="dash-orders-list">
+                            <!-- Rendered dynamically by script.js -->
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Income Breakdown & Fair-Wage Index -->
+                    <div class="content-panel">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <i class="fa-solid fa-chart-pie panel-icon"></i>
+                                <div>
+                                    <h2 data-i18n="incomeSummaryTitle">Artisan Income & Fair Wage</h2>
+                                    <span class="panel-subtitle" data-i18n="incomeSummarySubtitle">Direct UPI Bank
+                                        Transfers • 0% Middleman Cut</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-sm" onclick="triggerSimulatedOrderVoiceNotification()">
+                                <i class="fa-solid fa-volume-high"></i> <span data-i18n="testAlert">Test Alert</span>
+                            </button>
+                        </div>
+
+                        <!-- Income Metrics -->
+                        <div class="income-metrics-grid">
+                            <div class="metric-box">
+                                <span class="metric-label" data-i18n="totalCraftsSold">Total Crafts Sold</span>
+                                <span class="metric-val">47 <small data-i18n="items">items</small></span>
+                                <span class="metric-sub text-success"><i class="fa-solid fa-check-double"></i> 100%
+                                    Delivered</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-label" data-i18n="avgLaborWage">Your Hourly Wage</span>
+                                <span class="metric-val">₹280 <small>/ hr</small></span>
+                                <span class="metric-sub text-warning"><i class="fa-solid fa-award"></i> 2.8x vs
+                                    Traders</span>
+                            </div>
+                            <div class="metric-box highlight-emerald">
+                                <span class="metric-label" data-i18n="nextPayout">Next Bank Payout</span>
+                                <span class="metric-val">₹12,600</span>
+                                <span class="metric-sub text-success"><i class="fa-solid fa-calendar-check"></i>
+                                    Tomorrow 10 AM</span>
+                            </div>
+                        </div>
+
+                        <!-- Visual Bar Comparison Middleman vs CraftConnect -->
+                        <div class="fair-wage-comparison-card">
+                            <h4 data-i18n="wageComparisonTitle">CraftConnect Fair Value vs Traditional Middleman</h4>
+                            <div class="comparison-bar-group">
+                                <div class="bar-row">
+                                    <div class="bar-title"><span data-i18n="traditionalTrader">Middleman / Wholesale
+                                            Trader:</span> <strong>₹850</strong></div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill fill-bad" style="width: 35%;"></div>
+                                    </div>
+                                </div>
+                                <div class="bar-row">
+                                    <div class="bar-title"><span data-i18n="craftConnectDirect">CraftConnect Direct
+                                            Buyer:</span> <strong>₹2,450</strong></div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill fill-good" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gi-protection-note">
+                                <i class="fa-solid fa-shield-halved text-emerald"></i>
+                                <span data-i18n="giProtectionText">Protected by Geographical Indication (GI)
+                                    Authenticity AI Verification.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIVE CRAFTS IN MARKETPLACE CAROUSEL/GRID -->
+                <div class="content-panel mt-4">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <i class="fa-solid fa-gem panel-icon"></i>
+                            <div>
+                                <h2 data-i18n="myActiveListings">My Active Handmade Crafts (4 Listed)</h2>
+                                <span class="panel-subtitle" data-i18n="myActiveListingsSub">Handmade by you • Visible
+                                    to buyers across India & globally</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="switchView('voice-list')">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="addNewCraft">Add New Craft</span>
+                        </button>
+                    </div>
+                    <div class="artisan-items-grid" id="dash-my-items-grid">
+                        <!-- Dynamic items rendered by script.js -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ==============================================
+           2. VIEW: VOICE-FIRST PRODUCT LISTING & AI PRICING
+      =============================================== -->
+            <section id="view-voice-list" class="app-view">
+                <div class="voice-listing-container">
+
+                    <!-- Stepper Indicator -->
+                    <div class="listing-stepper">
+                        <div class="step-item active" id="step-node-1" onclick="setListingStep(1)">
+                            <div class="step-bubble">1</div>
+                            <span class="step-name" data-i18n="step1Title">Voice Pitch</span>
+                        </div>
+                        <div class="step-line" id="step-line-1"></div>
+                        <div class="step-item" id="step-node-2" onclick="setListingStep(2)">
+                            <div class="step-bubble">2</div>
+                            <span class="step-name" data-i18n="step2Title">Photos & Craft</span>
+                        </div>
+                        <div class="step-line" id="step-line-2"></div>
+                        <div class="step-item" id="step-node-3" onclick="setListingStep(3)">
+                            <div class="step-bubble">3</div>
+                            <span class="step-name" data-i18n="step3Title">AI Fair Price</span>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: VOICE PRODUCT PITCH -->
+                    <div class="step-content active" id="listing-step-1">
+                        <div class="voice-hero-box">
+                            <div class="voice-prompt-banner">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span data-i18n="voiceGuideStep1">Press the big microphone and tell us what you made!
+                                    Speak in Tamil, Hindi or English.</span>
+                            </div>
+
+                            <!-- Big Voice Recorder Target -->
+                            <div class="voice-recording-deck">
+                                <button class="giant-mic-btn" id="listing-mic-trigger"
+                                    onclick="toggleVoiceListingMic()">
+                                    <div class="pulse-ring"></div>
+                                    <div class="pulse-ring pulse-ring-2"></div>
+                                    <i class="fa-solid fa-microphone mic-core-icon"></i>
+                                    <span class="mic-status-text" id="listing-mic-status" data-i18n="tapToSpeak">Tap to
+                                        Speak</span>
+                                </button>
+
+                                <!-- Live Audio Visualizer Bars -->
+                                <div class="audio-bars" id="listing-audio-bars">
+                                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                                </div>
+
+                                <!-- Real-Time Speech Transcription Box -->
+                                <div class="transcription-card">
+                                    <div class="transcription-header">
+                                        <span class="badge-live" id="transcription-status-badge"><i
+                                                class="fa-solid fa-wave-square"></i> <span
+                                                data-i18n="aiListeningStatus">Ready to Listen</span></span>
+                                        <button class="btn-clear-text" onclick="clearListingTranscript()"
+                                            title="Clear text"><i class="fa-solid fa-rotate-left"></i> <span
+                                                data-i18n="reset">Reset</span></button>
+                                    </div>
+                                    <div class="transcription-output" id="listing-transcript-text"
+                                        data-placeholder="e.g. 'I have made a pure mulberry silk Kanchipuram saree with gold zari peacock motifs, took 14 days to weave, material cost was 3500 rupees.'">
+                                        <!-- Text fills here in real-time -->
+                                    </div>
+                                </div>
+
+                                <!-- Quick One-Tap Craft Voice Presets (For demo convenience / illiterate accessibility) -->
+                                <div class="voice-presets-area">
+                                    <div class="presets-title" data-i18n="quickPresetsTitle">Or tap a quick craft
+                                        template to auto-populate:</div>
+                                    <div class="preset-chips-scroll">
+                                        <button class="preset-chip" onclick="applyPresetVoiceListing('saree')">
+                                            <i class="fa-solid fa-vest"></i> <span data-i18n="presetSaree">Kanchipuram
+                                                Silk Saree</span>
+                                        </button>
+                                        <button class="preset-chip" onclick="applyPresetVoiceListing('pottery')">
+                                            <i class="fa-solid fa-jar"></i> <span data-i18n="presetPottery">Terracotta
+                                                Clay Water Jug</span>
+                                        </button>
+                                        <button class="preset-chip" onclick="applyPresetVoiceListing('wood')">
+                                            <i class="fa-solid fa-tree"></i> <span data-i18n="presetWood">Carved
+                                                Teakwood Box</span>
+                                        </button>
+                                        <button class="preset-chip" onclick="applyPresetVoiceListing('zardozi')">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span
+                                                data-i18n="presetZardozi">Zardozi Embroidery Shawl</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Auto-Extracted Craft Details Preview -->
+                            <div class="ai-extracted-preview" id="ai-extracted-box">
+                                <h4 class="extracted-title"><i class="fa-solid fa-robot text-gold"></i> <span
+                                        data-i18n="aiDetectedDetails">AI Detected Craft Parameters</span></h4>
+                                <div class="extracted-grid">
+                                    <div class="extracted-item">
+                                        <label data-i18n="craftTitleLabel">Craft Name:</label>
+                                        <input type="text" id="extract-title" class="form-input-clean"
+                                            value="Kanchipuram Pure Silk Handloom Saree">
+                                    </div>
+                                    <div class="extracted-item">
+                                        <label data-i18n="craftCategoryLabel">Category:</label>
+                                        <select id="extract-category" class="form-select-clean">
+                                            <option value="Handloom & Textiles" selected>Handloom & Textiles</option>
+                                            <option value="Terracotta & Pottery">Terracotta & Pottery</option>
+                                            <option value="Woodcraft & Carvings">Woodcraft & Carvings</option>
+                                            <option value="Embroidery & Zardozi">Embroidery & Zardozi</option>
+                                            <option value="Metal & Brassware">Metal & Brassware</option>
+                                        </select>
+                                    </div>
+                                    <div class="extracted-item">
+                                        <label data-i18n="craftTimeLabel">Hours Worked:</label>
+                                        <input type="number" id="extract-hours" class="form-input-clean" value="48">
+                                    </div>
+                                    <div class="extracted-item">
+                                        <label data-i18n="craftMaterialCostLabel">Raw Material Cost (₹):</label>
+                                        <input type="number" id="extract-mat-cost" class="form-input-clean"
+                                            value="2800">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="step-nav-footer">
+                                <button class="btn btn-secondary disabled" disabled><i
+                                        class="fa-solid fa-arrow-left"></i> <span
+                                        data-i18n="previous">Back</span></button>
+                                <button class="btn btn-primary" onclick="proceedToListingStep(2)">
+                                    <span data-i18n="nextPhotos">Next: Add Photos & Story</span> <i
+                                        class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: PHOTOS & AUDIO CRAFT STORY -->
+                    <div class="step-content" id="listing-step-2">
+                        <div class="photo-upload-section">
+                            <div class="section-title-group">
+                                <h3 data-i18n="uploadPhotosTitle">📸 Upload Craft Photos & Record Story</h3>
+                                <p data-i18n="uploadPhotosSub">Take photos with your phone camera. AI automatically
+                                    verifies authentic textures.</p>
+                            </div>
+
+                            <div class="upload-options-grid">
+                                <!-- Dropzone / Camera Capture -->
+                                <div class="upload-dropzone" onclick="triggerMockPhotoUpload()">
+                                    <input type="file" id="file-photo-input" accept="image/*" class="hidden"
+                                        onchange="handlePhotoSelected(event)">
+                                    <div class="dropzone-icon"><i class="fa-solid fa-camera"></i></div>
+                                    <h4 data-i18n="cameraClickTitle">Click to Open Camera or Choose Photo</h4>
+                                    <span class="dropzone-sub" data-i18n="cameraClickSub">High resolution captures
+                                        fabric weaves & clay finish</span>
+                                    <button class="btn btn-outline-sm mt-2" type="button"><i
+                                            class="fa-solid fa-image"></i> <span data-i18n="chooseSamplePhoto">Use
+                                            Sample Craft Photo</span></button>
+                                </div>
+
+                                <!-- Preview Gallery -->
+                                <div class="photos-preview-deck">
+                                    <div class="preview-deck-title" data-i18n="photosGalleryTitle">Selected Craft Photos
+                                        (Click to preview):</div>
+                                    <div class="photos-gallery-grid" id="listing-photos-container">
+                                        <div class="photo-thumb-card active">
+                                            <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&auto=format&fit=crop&q=80"
+                                                alt="Silk Saree Preview" id="main-preview-img">
+                                            <span class="photo-badge primary" data-i18n="mainCover">Main Cover</span>
+                                        </div>
+                                        <div class="photo-thumb-card">
+                                            <img src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&auto=format&fit=crop&q=80"
+                                                alt="Detail Zari Preview">
+                                            <span class="photo-badge" data-i18n="detailAngle">Detail Angle</span>
+                                        </div>
+                                        <div class="photo-thumb-card add-more" onclick="triggerMockPhotoUpload()">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span data-i18n="addMorePhoto">Add Photo</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- AI Texture & GI Tagging Result -->
+                                    <div class="ai-vision-tag-badge">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-gold"></i>
+                                        <div>
+                                            <strong data-i18n="aiVisionHeader">AI Vision Authenticity Analysis:</strong>
+                                            <div class="tag-pills">
+                                                <span class="tag-pill"><i
+                                                        class="fa-solid fa-circle-check text-success"></i> 100% Pure
+                                                    Mulberry Silk</span>
+                                                <span class="tag-pill"><i
+                                                        class="fa-solid fa-circle-check text-success"></i> Handloom
+                                                    Jacquard Border</span>
+                                                <span class="tag-pill"><i class="fa-solid fa-award text-gold"></i> GI
+                                                    Kanchipuram Weave Match</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Craft Voice Story Recording Section -->
+                            <div class="voice-story-recorder-box mt-4">
+                                <div class="recorder-header">
+                                    <div class="icon-circle"><i class="fa-solid fa-waveform-lines"></i></div>
+                                    <div>
+                                        <h4 data-i18n="recordStoryTitle">Record Your Craft Story (Audio)</h4>
+                                        <p data-i18n="recordStorySub">Buyers love hearing the heritage, weaver lineage,
+                                            and care instructions directly from your voice!</p>
+                                    </div>
+                                </div>
+
+                                <div class="story-record-deck">
+                                    <button class="btn btn-record-audio" id="btn-record-story"
+                                        onclick="toggleStoryRecording()">
+                                        <i class="fa-solid fa-circle-dot"></i> <span id="story-rec-label"
+                                            data-i18n="recordVoiceStory">Record 30-sec Story</span>
+                                    </button>
+                                    <button class="btn btn-outline-sm" id="btn-play-story"
+                                        onclick="playCurrentCraftStorySample()">
+                                        <i class="fa-solid fa-play"></i> <span data-i18n="previewAudioStory">Listen
+                                            Preview</span>
+                                    </button>
+                                    <span class="rec-timer" id="story-timer">00:24 / 00:30</span>
+                                </div>
+                            </div>
+
+                            <div class="step-nav-footer">
+                                <button class="btn btn-secondary" onclick="proceedToListingStep(1)"><i
+                                        class="fa-solid fa-arrow-left"></i> <span
+                                        data-i18n="previous">Back</span></button>
+                                <button class="btn btn-primary" onclick="proceedToListingStep(3)">
+                                    <span data-i18n="nextPricing">Next: AI Fair-Price Guarantee</span> <i
+                                        class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: AI FAIR-PRICE SUGGESTION & PUBLISH -->
+                    <div class="step-content" id="listing-step-3">
+                        <div class="ai-pricing-wizard">
+                            <div class="pricing-header-card">
+                                <div class="pricing-header-badge"><i class="fa-solid fa-scale-balanced"></i> <span
+                                        data-i18n="aiFairWageIndex">AI Fair-Wage Calculation</span></div>
+                                <h3 data-i18n="pricingHeaderTitle">Transparent Fair Price Recommendation</h3>
+                                <p data-i18n="pricingHeaderSub">We ensure you never get underpaid. We calculate fair
+                                    artisan living wages based on your exact craft hours, material costs, and market
+                                    demand.</p>
+                            </div>
+
+                            <!-- Interactive Pricing Sliders & Gauge -->
+                            <div class="pricing-calculator-layout">
+
+                                <!-- Left: Controls -->
+                                <div class="pricing-inputs-card">
+                                    <div class="slider-control-group">
+                                        <div class="slider-label-row">
+                                            <span class="label-title"><i
+                                                    class="fa-solid fa-layer-group text-primary"></i> <span
+                                                    data-i18n="materialCostSlider">Raw Material Cost:</span></span>
+                                            <span class="label-val" id="val-mat-cost">₹2,800</span>
+                                        </div>
+                                        <input type="range" class="cc-range-slider" id="slider-mat-cost" min="200"
+                                            max="15000" step="100" value="2800" oninput="updateFairPriceCalculation()">
+                                        <div class="slider-range-hints">
+                                            <span>₹200</span>
+                                            <span>₹15,000</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="slider-control-group">
+                                        <div class="slider-label-row">
+                                            <span class="label-title"><i class="fa-solid fa-clock text-accent"></i>
+                                                <span data-i18n="laborHoursSlider">Artisan Crafting Hours:</span></span>
+                                            <span class="label-val" id="val-labor-hours">48 hours (6 days)</span>
+                                        </div>
+                                        <input type="range" class="cc-range-slider" id="slider-labor-hours" min="2"
+                                            max="120" step="2" value="48" oninput="updateFairPriceCalculation()">
+                                        <div class="slider-range-hints">
+                                            <span>2 hrs</span>
+                                            <span>120 hrs</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="slider-control-group">
+                                        <div class="slider-label-row">
+                                            <span class="label-title"><i
+                                                    class="fa-solid fa-wand-magic-sparkles text-gold"></i> <span
+                                                    data-i18n="craftIntricacySlider">Craft Intricacy & Skill
+                                                    Level:</span></span>
+                                            <span class="label-val" id="val-craft-skill">Master Artisan (Level 5)</span>
+                                        </div>
+                                        <input type="range" class="cc-range-slider" id="slider-craft-skill" min="1"
+                                            max="5" step="1" value="5" oninput="updateFairPriceCalculation()">
+                                        <div class="slider-range-hints">
+                                            <span>Simple Craft</span>
+                                            <span>GI Masterpiece</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- GI Tag Authenticity Boost -->
+                                    <div class="gi-boost-toggle-card">
+                                        <div class="toggle-info">
+                                            <i class="fa-solid fa-certificate text-gold"></i>
+                                            <div>
+                                                <strong data-i18n="giCertifiedPremium">GI Tag Certification
+                                                    Verified</strong>
+                                                <p data-i18n="giCertifiedPremiumSub">+25% premium for authentic regional
+                                                    handicraft origin</p>
+                                            </div>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" id="check-gi-boost" checked
+                                                onchange="updateFairPriceCalculation()">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Recommendation Gauge & Breakdown -->
+                                <div class="pricing-output-card">
+                                    <div class="suggested-price-hero">
+                                        <div class="suggested-label" data-i18n="aiFairSuggestedPrice">AI Fair-Market
+                                            Recommended Price</div>
+                                        <div class="suggested-amount-hero" id="calc-suggested-price">₹7,450</div>
+                                        <div class="price-range-sub" id="calc-price-range">Safe Range: ₹6,900 - ₹8,200
+                                        </div>
+                                    </div>
+
+                                    <!-- Detailed Math Breakdown for Transparency -->
+                                    <div class="price-breakdown-list">
+                                        <div class="breakdown-row">
+                                            <span><i class="fa-solid fa-box"></i> <span data-i18n="rawMaterials">Raw
+                                                    Materials</span></span>
+                                            <strong id="breakdown-materials">₹2,800</strong>
+                                        </div>
+                                        <div class="breakdown-row">
+                                            <span><i class="fa-solid fa-user-clock"></i> <span
+                                                    data-i18n="artisanLabor">Artisan Fair Labor (₹250/hr)</span></span>
+                                            <strong id="breakdown-labor">₹3,600</strong>
+                                        </div>
+                                        <div class="breakdown-row">
+                                            <span><i class="fa-solid fa-award"></i> <span data-i18n="giSkillPremium">GI
+                                                    Heritage & Skill Premium</span></span>
+                                            <strong id="breakdown-premium">₹1,050</strong>
+                                        </div>
+                                        <div class="breakdown-row total-highlight">
+                                            <span><i class="fa-solid fa-wallet"></i> <span
+                                                    data-i18n="yourNetProfit">Your Direct Earnings</span></span>
+                                            <strong class="text-emerald" id="breakdown-net">₹7,450 (100%)</strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- Final Listing Price Input (Artisan can adjust) -->
+                                    <div class="custom-final-price-box">
+                                        <label for="input-final-price" data-i18n="finalSellingPriceLabel">Your Final
+                                            Selling Price (₹):</label>
+                                        <div class="input-with-icon">
+                                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                                            <input type="number" id="input-final-price" value="7450"
+                                                class="input-final-price">
+                                        </div>
+                                        <small class="price-advice text-success" data-i18n="priceAdvice">✨ Protected by
+                                            CraftConnect 0% Middleman Guarantee</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="step-nav-footer">
+                                <button class="btn btn-secondary" onclick="proceedToListingStep(2)"><i
+                                        class="fa-solid fa-arrow-left"></i> <span
+                                        data-i18n="previous">Back</span></button>
+                                <button class="btn btn-success btn-publish-huge" onclick="publishCraftListing()">
+                                    <i class="fa-solid fa-rocket"></i> <span data-i18n="publishListingBtn">🎉 Publish to
+                                        Marketplace with Voice</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ==============================================
+           3. VIEW: BUYER MARKETPLACE (Explore Crafts)
+      =============================================== -->
+            <section id="view-marketplace" class="app-view">
+                <div class="marketplace-header-deck">
+                    <div class="market-intro">
+                        <span class="badge-accent" data-i18n="directFromMakers">100% Direct From Rural Indian
+                            Makers</span>
+                        <h2 data-i18n="marketTitle">Discover Authentic Indian Handicrafts</h2>
+                        <p data-i18n="marketSub">Every craft item features the maker's authentic voice story, GI origin
+                            certification, and fair-wage verification.</p>
+                    </div>
+
+                    <!-- Search & Filter Toolbar -->
+                    <div class="market-search-bar">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="market-search-input"
+                                placeholder="Search Kanchipuram silk, terracotta pottery, woodcraft, Bastar art..."
+                                oninput="filterMarketplaceItems()">
+                        </div>
+                        <button class="btn-voice-search" onclick="openVoiceAssistant('market-search')"
+                            title="Voice Search Crafts">
+                            <i class="fa-solid fa-microphone"></i>
+                            <span data-i18n="voiceSearch">Voice Search</span>
+                        </button>
+                    </div>
+
+                    <!-- Category Chips -->
+                    <div class="category-filters-scroll" id="category-filters-list">
+                        <button class="category-chip active" data-cat="all" onclick="setCategoryFilter('all')">
+                            <i class="fa-solid fa-border-all"></i> <span data-i18n="catAll">All Crafts</span>
+                        </button>
+                        <button class="category-chip" data-cat="saree" onclick="setCategoryFilter('saree')">
+                            <i class="fa-solid fa-vest"></i> <span data-i18n="catSarees">Handloom Sarees</span>
+                        </button>
+                        <button class="category-chip" data-cat="pottery" onclick="setCategoryFilter('pottery')">
+                            <i class="fa-solid fa-jar"></i> <span data-i18n="catPottery">Terracotta Pottery</span>
+                        </button>
+                        <button class="category-chip" data-cat="wood" onclick="setCategoryFilter('wood')">
+                            <i class="fa-solid fa-tree"></i> <span data-i18n="catWood">Hand-Carved Wood</span>
+                        </button>
+                        <button class="category-chip" data-cat="embroidery" onclick="setCategoryFilter('embroidery')">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="catEmbroidery">Zardozi &
+                                Embroidery</span>
+                        </button>
+                        <button class="category-chip" data-cat="metal" onclick="setCategoryFilter('metal')">
+                            <i class="fa-solid fa-bell"></i> <span data-i18n="catMetal">Brass & Dhokra Art</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Marketplace Items Grid -->
+                <div class="marketplace-grid" id="marketplace-items-grid">
+                    <!-- Dynamic cards rendered by script.js -->
+                </div>
+            </section>
+
+
+            <!-- ==============================================
+           4. VIEW: ORDERS & DISPATCH TRACKING
+      =============================================== -->
+            <section id="view-orders" class="app-view">
+                <div class="orders-page-wrapper">
+                    <div class="page-title-row">
+                        <div>
+                            <h2 data-i18n="ordersPageTitle">📦 Orders & Dispatch Manager</h2>
+                            <p class="page-sub" data-i18n="ordersPageSub">Manage customer orders. Use voice commands to
+                                mark orders packed or picked up.</p>
+                        </div>
+                        <div class="orders-voice-actions">
+                            <button class="btn btn-voice-action" onclick="openVoiceAssistant('orders-voice')">
+                                <i class="fa-solid fa-microphone"></i> <span data-i18n="voiceUpdateOrder">🎤 Speak to
+                                    Update Status</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Order Tabs Filter -->
+                    <div class="order-status-tabs">
+                        <button class="order-tab active" data-order-tab="all" onclick="filterOrderTab('all')">
+                            <span data-i18n="allOrdersTab">All Orders</span> (3)
+                        </button>
+                        <button class="order-tab" data-order-tab="pending" onclick="filterOrderTab('pending')">
+                            <span data-i18n="pendingCraftingTab">In Crafting / Loom</span> (1)
+                        </button>
+                        <button class="order-tab" data-order-tab="packed" onclick="filterOrderTab('packed')">
+                            <span data-i18n="packedTab">Ready for Pickup</span> (1)
+                        </button>
+                        <button class="order-tab" data-order-tab="dispatched" onclick="filterOrderTab('dispatched')">
+                            <span data-i18n="dispatchedTab">In Transit</span> (1)
+                        </button>
+                    </div>
+
+                    <!-- Order Cards List -->
+                    <div class="orders-list-deck" id="orders-full-list">
+                        <!-- Rendered by script.js -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ==============================================
+           5. VIEW: STANDALONE AI FAIR-PRICE ESTIMATOR
+      =============================================== -->
+            <section id="view-price-ai" class="app-view">
+                <div class="standalone-fair-price-container">
+                    <div class="tool-banner">
+                        <div class="tool-badge"><i class="fa-solid fa-brain"></i> <span data-i18n="smartWageTool">Smart
+                                Fair-Wage Calculator</span></div>
+                        <h2 data-i18n="toolTitle">Artisan Fair Labor & Craft Wage Estimator</h2>
+                        <p data-i18n="toolSub">Protect yourself against low trader offers. Calculate true market value
+                            before agreeing to sell wholesale or retail.</p>
+                    </div>
+
+                    <div class="fair-price-standalone-grid">
+                        <div class="tool-calc-card">
+                            <h3 data-i18n="enterCraftParams">Enter Craft Parameters</h3>
+
+                            <div class="input-group-row">
+                                <label data-i18n="selectCraftType">Type of Handicraft:</label>
+                                <select id="standalone-craft-type" class="form-select-clean"
+                                    onchange="recalculateStandalonePrice()">
+                                    <option value="saree">Kanchipuram / Banarasi Handloom Saree</option>
+                                    <option value="pottery">Terracotta / Khurja Ceramic Pottery</option>
+                                    <option value="wood">Teak / Rosewood Carving & Figurine</option>
+                                    <option value="embroidery">Kashmiri / Lucknowi Zardozi Embroidery</option>
+                                    <option value="brass">Bastar Dhokra / Brass Bell Metal</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group-row">
+                                <label data-i18n="rawMaterialCostLabel">Raw Material Cost (Silk, Yarn, Clay, Wood,
+                                    Inks):</label>
+                                <div class="input-with-addon">
+                                    <span class="addon">₹</span>
+                                    <input type="number" id="standalone-mat-cost" value="3200"
+                                        oninput="recalculateStandalonePrice()">
+                                </div>
+                            </div>
+
+                            <div class="input-group-row">
+                                <label data-i18n="artisanHoursLabel">Total Labor Hours Spent:</label>
+                                <div class="input-with-addon">
+                                    <span class="addon"><i class="fa-solid fa-clock"></i></span>
+                                    <input type="number" id="standalone-hours" value="36"
+                                        oninput="recalculateStandalonePrice()">
+                                    <span class="addon-text">Hours</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group-row">
+                                <label data-i18n="masteryLevelLabel">Artisan Experience / GI Heritage:</label>
+                                <select id="standalone-experience" class="form-select-clean"
+                                    onchange="recalculateStandalonePrice()">
+                                    <option value="master">Master Artisan (GI Recognized, 10+ Years)</option>
+                                    <option value="skilled">Skilled Artisan (5-10 Years)</option>
+                                    <option value="apprentice">Apprentice / Cooperative Member</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-voice-action mt-3" onclick="speakStandalonePriceAdvice()">
+                                <i class="fa-solid fa-volume-high"></i> <span data-i18n="speakPriceAdviceBtn">🔊 Speak
+                                    Price Advice in My Language</span>
+                            </button>
+                        </div>
+
+                        <!-- Calculation Output & Recommendation Card -->
+                        <div class="tool-result-card">
+                            <div class="result-badge-top"><i class="fa-solid fa-shield-check"></i> <span
+                                    data-i18n="fairPriceGuarantee">Certified Fair Value</span></div>
+                            <div class="result-price-large" id="standalone-result-price">₹8,600</div>
+                            <div class="result-sub-label" data-i18n="minimumSafeSellPrice">Minimum Safe Price: <strong
+                                    id="standalone-min-price">₹7,800</strong></div>
+
+                            <div class="profit-highlight-card">
+                                <div class="profit-row">
+                                    <span data-i18n="guaranteedWage">Guaranteed Artisan Hourly Wage:</span>
+                                    <strong class="text-emerald" id="standalone-wage">₹250 / hr</strong>
+                                </div>
+                                <div class="profit-row">
+                                    <span data-i18n="traderOfferComparison">Usual Trader / Middleman Price:</span>
+                                    <span class="text-danger strike" id="standalone-trader-price">₹2,800 (67%
+                                        Underpaid!)</span>
+                                </div>
+                            </div>
+
+                            <div class="voice-advice-box">
+                                <div class="advice-header">
+                                    <i class="fa-solid fa-lightbulb text-gold"></i>
+                                    <strong data-i18n="aiNegotiationTip">AI Negotiation Advice:</strong>
+                                </div>
+                                <p id="standalone-advice-text" data-i18n="negotiationAdviceDefault">"Never sell this
+                                    craft below ₹7,800. The pure silk yarn and 36 hours of hand jacquard weaving justify
+                                    a premium market price."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ==============================================
+           6. VIEW: VERIFIED ARTISAN PROFILE & STORY
+      =============================================== -->
+            <section id="view-profile" class="app-view">
+                <div class="profile-container">
+
+                    <!-- Profile Header Card -->
+                    <div class="profile-header-banner">
+                        <div class="profile-banner-bg"></div>
+                        <div class="profile-banner-body">
+                            <div class="profile-avatar-wrapper">
+                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80"
+                                    alt="Devi Ammal Master Weaver" class="profile-avatar-large">
+                                <div class="gi-verified-seal" title="GI Tag Certified Master Craftsperson">
+                                    <i class="fa-solid fa-award"></i>
+                                </div>
+                            </div>
+
+                            <div class="profile-main-meta">
+                                <div class="profile-name-row">
+                                    <h2 class="profile-fullname">Devi Ammal</h2>
+                                    <span class="badge-gi-tag"><i class="fa-solid fa-certificate"></i> GI Tag:
+                                        Kanchipuram Silk</span>
+                                </div>
+                                <p class="profile-heritage-title" data-i18n="profileHeritage">4th Generation Master
+                                    Weaver • Kanchipuram Weavers Cooperative</p>
+                                <div class="profile-stats-row">
+                                    <div class="profile-stat-item">
+                                        <strong>28</strong>
+                                        <span data-i18n="yearsExperience">Years Crafting</span>
+                                    </div>
+                                    <div class="profile-stat-item">
+                                        <strong>184</strong>
+                                        <span data-i18n="craftsSold">Crafts Sold</span>
+                                    </div>
+                                    <div class="profile-stat-item">
+                                        <strong>4.9 ★</strong>
+                                        <span data-i18n="buyerRating">Buyer Rating</span>
+                                    </div>
+                                    <div class="profile-stat-item">
+                                        <strong>100%</strong>
+                                        <span data-i18n="fairWageVerified">Fair Wage Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-actions-deck">
+                                <button class="btn btn-primary" onclick="switchView('voice-list')">
+                                    <i class="fa-solid fa-plus"></i> <span data-i18n="addListingProfile">Add
+                                        Listing</span>
+                                </button>
+                                <button class="btn btn-outline-sm" onclick="showBankDetailsModal()">
+                                    <i class="fa-solid fa-building-columns"></i> <span data-i18n="bankUpiSettings">Bank
+                                        / UPI</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AUDIO STORY PLAYER SECTION -->
+                    <div class="content-panel mt-4">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <i class="fa-solid fa-music panel-icon"></i>
+                                <div>
+                                    <h3 data-i18n="artisanAudioStoryHeader">My Craft Story & Heritage (Audio)</h3>
+                                    <span class="panel-subtitle" data-i18n="artisanAudioStorySub">Recorded in Tamil with
+                                        AI subtitle translations in Hindi & English</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-sm" onclick="toggleStoryRecording()">
+                                <i class="fa-solid fa-microphone"></i> <span data-i18n="reRecordStory">Re-record
+                                    Story</span>
+                            </button>
+                        </div>
+
+                        <div class="audio-story-player-card">
+                            <div class="player-left">
+                                <button class="player-play-btn" id="profile-play-story-btn"
+                                    onclick="toggleProfileAudioStoryPlayback()">
+                                    <i class="fa-solid fa-play" id="profile-play-icon"></i>
+                                </button>
+                                <div class="track-meta">
+                                    <div class="track-title" data-i18n="storyTrackTitle">"The Loom of Ancestors: 4
+                                        Generations of Silk Weaving"</div>
+                                    <div class="track-artist">Devi Ammal • Kanchipuram, Tamil Nadu</div>
+                                </div>
+                            </div>
+
+                            <!-- Waveform Visualizer -->
+                            <div class="waveform-container" id="profile-story-waveform">
+                                <div class="waveform-bar" style="height: 35%"></div>
+                                <div class="waveform-bar" style="height: 65%"></div>
+                                <div class="waveform-bar" style="height: 85%"></div>
+                                <div class="waveform-bar" style="height: 45%"></div>
+                                <div class="waveform-bar" style="height: 95%"></div>
+                                <div class="waveform-bar" style="height: 70%"></div>
+                                <div class="waveform-bar" style="height: 50%"></div>
+                                <div class="waveform-bar" style="height: 80%"></div>
+                                <div class="waveform-bar" style="height: 100%"></div>
+                                <div class="waveform-bar" style="height: 60%"></div>
+                                <div class="waveform-bar" style="height: 40%"></div>
+                                <div class="waveform-bar" style="height: 75%"></div>
+                                <div class="waveform-bar" style="height: 90%"></div>
+                                <div class="waveform-bar" style="height: 55%"></div>
+                                <div class="waveform-bar" style="height: 30%"></div>
+                            </div>
+
+                            <div class="track-duration" id="profile-story-duration">01:15</div>
+                        </div>
+
+                        <!-- Audio Story Transcript in selected language -->
+                        <div class="story-transcript-card">
+                            <div class="transcript-lang-badge"><i class="fa-solid fa-quote-left"></i> <span
+                                    data-i18n="voiceStoryTranscript">Artisan's Spoken Words</span></div>
+                            <p class="transcript-body" id="profile-story-transcript-text"
+                                data-i18n="profileStoryTranscriptText">
+                                "I started weaving when I was 12 years old alongside my mother. Every pure silk saree
+                                takes over 14 days on our traditional pit loom. When you buy our saree, you keep our
+                                150-year-old family weaving heritage alive."
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Artisan Gallery / Portfolio -->
+                    <div class="content-panel mt-4">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <i class="fa-solid fa-images panel-icon"></i>
+                                <div>
+                                    <h3 data-i18n="myGalleryTitle">Craft Portfolio & Masterpieces</h3>
+                                    <span class="panel-subtitle" data-i18n="myGallerySub">All products listed with
+                                        direct buyer checkout</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="artisan-items-grid" id="profile-items-grid">
+                            <!-- Rendered by script.js -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+    <!-- ==============================================
+       VOICE ASSISTANT OVERLAY MODAL ("ConnectVaani")
+  =============================================== -->
+    <div class="voice-modal-overlay" id="voice-assistant-modal">
+        <div class="voice-modal-card">
+            <button class="modal-close-btn" onclick="closeVoiceAssistant()" title="Close Assistant">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="vaani-header">
+                <div class="vaani-avatar">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                </div>
+                <div class="vaani-title-group">
+                    <h3>ConnectVaani <span class="vaani-pill" data-i18n="vaaniBadge">Voice AI</span></h3>
+                    <p id="vaani-lang-indicator">Speaking in English (தமிழ் / हिन्दी available)</p>
+                </div>
+            </div>
+
+            <!-- Animated Voice Visualizer Wave -->
+            <div class="vaani-visualizer">
+                <div class="visualizer-circle" id="vaani-mic-state-circle">
+                    <i class="fa-solid fa-microphone" id="vaani-mic-icon"></i>
+                </div>
+                <div class="visualizer-ripples">
+                    <span class="ripple r1"></span>
+                    <span class="ripple r2"></span>
+                    <span class="ripple r3"></span>
+                </div>
+            </div>
+
+            <!-- Status & Transcription Box -->
+            <div class="vaani-status-box">
+                <div class="vaani-status-text" id="vaani-status-text" data-i18n="vaaniListening">Listening... Speak now
+                </div>
+                <div class="vaani-transcript-preview" id="vaani-live-transcript">
+                    "Tap below or say 'Sell a handloom saree for 4500 rupees'"
+                </div>
+            </div>
+
+            <!-- Quick Command Chips for Low-Literacy Tap & Speak -->
+            <div class="vaani-quick-commands">
+                <div class="quick-commands-label" data-i18n="trySaying">Try saying or tap:</div>
+                <div class="command-chips-list">
+                    <button class="command-chip" onclick="simulateVoiceCommand('sell saree')">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="cmdSellSaree">"Sell Kanchipuram Saree"</span>
+                    </button>
+                    <button class="command-chip" onclick="simulateVoiceCommand('check orders')">
+                        <i class="fa-solid fa-boxes-packing"></i> <span data-i18n="cmdCheckOrders">"Check my
+                            orders"</span>
+                    </button>
+                    <button class="command-chip" onclick="simulateVoiceCommand('my income')">
+                        <i class="fa-solid fa-indian-rupee-sign"></i> <span data-i18n="cmdCheckEarnings">"How much did I
+                            earn?"</span>
+                    </button>
+                    <button class="command-chip" onclick="simulateVoiceCommand('help')">
+                        <i class="fa-solid fa-circle-question"></i> <span data-i18n="cmdHowToUse">"How does CraftConnect
+                            work?"</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="vaani-footer">
+                <button class="btn btn-secondary" onclick="toggleAssistantListening()" id="vaani-toggle-listen-btn">
+                    <i class="fa-solid fa-microphone-slash"></i> <span data-i18n="pauseMic">Pause Mic</span>
+                </button>
+                <button class="btn btn-primary" onclick="processVoiceAssistantCommand()">
+                    <i class="fa-solid fa-arrow-right"></i> <span data-i18n="executeCommand">Process</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==============================================
+       PRODUCT DETAIL / BUYER ORDER MODAL
+  =============================================== -->
+    <div class="product-modal-overlay" id="product-detail-modal">
+        <div class="product-modal-card">
+            <button class="modal-close-btn" onclick="closeProductModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="product-modal-body" id="product-modal-content">
+                <!-- Rendered dynamically by script.js -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==============================================
+       INCOMING VOICE ORDER ALERT TOAST / POPUP
+  =============================================== -->
+    <div class="order-alert-popup" id="incoming-order-popup">
+        <div class="alert-icon-ring"><i class="fa-solid fa-bell ringing"></i></div>
+        <div class="alert-content">
+            <div class="alert-tag" data-i18n="newOrderAlertTitle">🎉 New Voice Order Received!</div>
+            <div class="alert-title" id="alert-order-title">Kanchipuram Silk Saree</div>
+            <div class="alert-buyer" id="alert-order-buyer">Buyer: Priya Sharma, Mumbai • ₹7,450</div>
+        </div>
+        <div class="alert-actions">
+            <button class="btn btn-sm btn-primary" onclick="acceptIncomingOrder()"><i class="fa-solid fa-check"></i>
+                <span data-i18n="accept">Accept</span></button>
+            <button class="btn btn-sm btn-outline-sm" onclick="dismissOrderAlert()"><i
+                    class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+
+    <!-- ==============================================
+       BANK & UPI SETTINGS MODAL
+  =============================================== -->
+    <div class="generic-modal-overlay" id="bank-modal">
+        <div class="generic-modal-card">
+            <button class="modal-close-btn" onclick="closeBankModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header-icon"><i class="fa-solid fa-building-columns"></i></div>
+            <h3 data-i18n="bankModalTitle">Direct Artisan Bank & UPI Account</h3>
+            <p class="modal-sub" data-i18n="bankModalSub">Payments from buyers are deposited instantly into this bank
+                account without middlemen commissions.</p>
+
+            <div class="bank-form">
+                <div class="form-group">
+                    <label data-i18n="artisanUpiLabel">UPI ID (Google Pay / PhonePe / Paytm):</label>
+                    <input type="text" id="artisan-upi-input" value="devi.ammal@upi" class="form-input-clean">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="bankAccountLabel">Bank Account Number:</label>
+                    <input type="text" id="artisan-bank-acc" value="•••• •••• •••• 4829" class="form-input-clean">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="bankIfscLabel">IFSC Code:</label>
+                    <input type="text" id="artisan-bank-ifsc" value="SBIN0001245 (SBI Kanchipuram)"
+                        class="form-input-clean">
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full mt-3" onclick="saveBankDetails()">
+                <i class="fa-solid fa-circle-check"></i> <span data-i18n="saveAccount">Save & Verify Account</span>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ==============================================
+       ARTISAN ONBOARDING MODAL (Voice-First Setup)
+  =============================================== -->
+    <div class="generic-modal-overlay" id="onboarding-modal">
+        <div class="generic-modal-card onboarding-card">
+            <button class="modal-close-btn" onclick="closeOnboardingModal()"><i class="fa-solid fa-xmark"></i></button>
+
+            <!-- Stepper for Onboarding -->
+            <div class="onboard-progress-bar">
+                <div class="onboard-step-dot active" id="onboard-dot-1">1</div>
+                <div class="onboard-step-line" id="onboard-line-1"></div>
+                <div class="onboard-step-dot" id="onboard-dot-2">2</div>
+                <div class="onboard-step-line" id="onboard-line-2"></div>
+                <div class="onboard-step-dot" id="onboard-dot-3">3</div>
+            </div>
+
+            <!-- Onboarding Step 1: Language -->
+            <div class="onboard-step-pane active" id="onboard-step-1">
+                <div class="modal-header-icon"><i class="fa-solid fa-language"></i></div>
+                <h3>Select Your Spoken Language</h3>
+                <p class="modal-sub">உங்கள் தாய்மொழி / अपनी भाषा चुनें</p>
+
+                <div class="onboard-lang-grid">
+                    <button class="onboard-lang-btn" onclick="selectOnboardingLang('ta')">
+                        <span class="lang-large">தமிழ்</span>
+                        <span class="lang-sub">Tamil (குரல் வழி)</span>
+                    </button>
+                    <button class="onboard-lang-btn" onclick="selectOnboardingLang('hi')">
+                        <span class="lang-large">हिन्दी</span>
+                        <span class="lang-sub">Hindi (आवाज़ से)</span>
+                    </button>
+                    <button class="onboard-lang-btn" onclick="selectOnboardingLang('en')">
+                        <span class="lang-large">English</span>
+                        <span class="lang-sub">English (Voice-First)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Onboarding Step 2: Voice Name & Village -->
+            <div class="onboard-step-pane" id="onboard-step-2">
+                <div class="modal-header-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                <h3>Speak Your Name & Village</h3>
+                <p class="modal-sub" id="onboard-voice-prompt">Press the microphone and say: "My name is Devi Ammal from
+                    Kanchipuram"</p>
+
+                <div class="voice-onboard-mic-wrap">
+                    <button class="onboard-mic-btn" id="onboard-mic-trigger" onclick="recordOnboardingVoiceBio()">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <span class="mic-status-label" id="onboard-mic-status">Tap to Speak Name & Village</span>
+                </div>
+
+                <div class="onboard-input-box">
+                    <input type="text" id="onboard-artisan-name-input" placeholder="Artisan Name" value="Devi Ammal"
+                        class="form-input-clean mb-2" style="margin-bottom:8px">
+                    <input type="text" id="onboard-artisan-location-input" placeholder="Village / Region"
+                        value="Kanchipuram, Tamil Nadu" class="form-input-clean">
+                </div>
+
+                <div class="modal-footer-nav mt-3">
+                    <button class="btn btn-secondary" onclick="setOnboardingStep(1)">Back</button>
+                    <button class="btn btn-primary" onclick="setOnboardingStep(3)">Next: Select Craft</button>
+                </div>
+            </div>
+
+            <!-- Onboarding Step 3: Craft Type & GI Verification -->
+            <div class="onboard-step-pane" id="onboard-step-3">
+                <div class="modal-header-icon"><i class="fa-solid fa-award"></i></div>
+                <h3>Select Your Primary Craft</h3>
+                <p class="modal-sub">We match you with verified Geographical Indication (GI) tags</p>
+
+                <div class="onboard-craft-grid">
+                    <div class="onboard-craft-tile active"
+                        onclick="selectOnboardingCraft(this, 'Handloom Silk Weaving')">
+                        <i class="fa-solid fa-vest"></i>
+                        <span>Handloom Weaving</span>
+                    </div>
+                    <div class="onboard-craft-tile" onclick="selectOnboardingCraft(this, 'Terracotta Pottery')">
+                        <i class="fa-solid fa-jar"></i>
+                        <span>Terracotta Pottery</span>
+                    </div>
+                    <div class="onboard-craft-tile" onclick="selectOnboardingCraft(this, 'Hand-Carved Wood')">
+                        <i class="fa-solid fa-tree"></i>
+                        <span>Wood Carving</span>
+                    </div>
+                    <div class="onboard-craft-tile" onclick="selectOnboardingCraft(this, 'Zardozi Embroidery')">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Zardozi & Embroidery</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-success btn-full btn-lg mt-4" onclick="completeOnboarding()">
+                    <i class="fa-solid fa-circle-check"></i> <span>Complete Setup & Open Studio</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
